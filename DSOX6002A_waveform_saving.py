@@ -10,8 +10,7 @@ import pyvisa
 import time
 from drawnow import drawnow
 import matplotlib.pyplot as plt
-import string
-
+import csv
 
 maxf = []
 maxdb = []
@@ -77,10 +76,14 @@ for i in range(No_of_times):
     plt.plot(t,data*1000)
     plt.show()
     
-    
+    filename = 'output_{}.csv'.format(i)
+    with open(filename, 'w', newline='') as file:
+        writer = csv.writer(file)
+        # Write each row to the CSV file
+        for j in range(len(data)):
+            writer.writerow([t[j],data[j]*1000])
     
     time.sleep(every_time_in_sec)
+   
 DSO.close()
 rm.close()
-
-# end of Untitled
