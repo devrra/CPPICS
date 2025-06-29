@@ -10,6 +10,8 @@ import pyvisa
 import time
 from drawnow import drawnow
 import matplotlib.pyplot as plt
+import string
+
 
 maxf = []
 maxdb = []
@@ -32,29 +34,51 @@ def makeFig_db():
    
     fig2=plt.plot(maxdb)
     
-plt.ion() # enable interactivity
+# plt.ion() # enable interactivity
 
 
 rm = pyvisa.ResourceManager()
 rm.list_resources()
-DSO =  rm.open_resource('TCPIP0::10.21.2.47::hislip0::INSTR')
+DSO =  rm.open_resource('TCPIP0::10.21.1.97::INSTR')
 print(DSO.query("*IDN?"))
 
 DSO.write(':CHANnel1:COUPling %s' % ('DC'))     # sets channel coupling - 'AC', 'DC'
-DSO.write(':CHANnel1:IMPedance %s' % ('FIFTy')) # sets channel impedence - 'FIFTy', 'ONEMeg'
-DSO.write(':SAVE:WAVeform:FORMat %s' % ('CSV')) # sets the waveform data format type - 'ASCiixy', 'CSV', 'BINary'
+DSO.write(':CHANnel1:IMPedance %s' % ('ONEMeg')) # sets channel impedence - 'FIFTy', 'ONEMeg'
+DSO.write(':SAVE:WAVeform:FORMat %s' % ('ASCiixy')) # sets the waveform data format type - 'ASCiixy', 'CSV', 'BINary'
 DSO.write(':WAVeform:SOURce %s' % ('CHANnel1')) # 
 DSO.write(':WAVeform:FORMat %s' % ('ASCii'))    # sets the data transmission mode for waveform data points - 'WORD', 'BYTE', 'ASCii'
 
-every_time_in_sec  =30
+every_time_in_sec  =2
 No_of_times = 1
 for i in range(No_of_times):
     # DSO.write(':RUN')
     DSO.write(':SINGle')
     # DSO.write(':STOP')
-    DSO.write(':SAVE:WAVeform:STARt "%s"' % ('wav1'))
-    temp_values = DSO.query_binary_values(':WAVeform:DATA?','s',False)
-    binaryBlockData = temp_values[0].decode().split(',')
+    # DSO.write(':SAVE:WAVeform:STARt "%s"' % ('wav1'))
+    preamble  = DSO.query(':WAVeform:PREamble?')
+    preamble = preamble.split(',')
+    num_pts = int(preamble[2])
+    xincrement = float(preamble[4])
+    xorigin = float(preamble[5])
+    xreference = int(preamble[6])
+    yincrement = float(preamble[7])
+    yorigin = float(preamble[8])
+    yreference = int(preamble[9])
+    
+    data  = DSO.query(':WAVeform:DATa?')
+    data = data.split(',')
+    for i in range(1,len(data)):
+        data[i] = float(data[i])
+    data = np.array(data[1:])
+    
+    t = xorigin + np.arange(len(data))*xincrement
+    # v = (data - yreference)*yincrement + yorigin
+    
+    plt.plot(t,data*1000)
+    plt.show()
+    
+    
+    
     time.sleep(every_time_in_sec)
 DSO.close()
 rm.close()
