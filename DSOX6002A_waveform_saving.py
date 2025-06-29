@@ -81,7 +81,7 @@ for i in range(No_of_times):
         writer = csv.writer(file)
         # Write each row to the CSV file
         for j in range(len(data)):
-            writer.writerow([t[j],data[j]*1000])
+            writer.writerow([t[j],data[j]])
     
     time.sleep(every_time_in_sec)
    
